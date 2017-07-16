@@ -15,45 +15,58 @@ next: 播放下一首
 before: 播放上一首\
 '''
 
-music_dir  = "/Users/lizaoji/music/网易云音乐/"
+music_dir  = "C:\\Users\\29076\\Music"
 music_index= {}
 search_limit = 10
-search_result= []
-wait_choose = False
+#wait_choose = False
 
 
 @itchat.msg_register(itchat.content.TEXT)
 def music_player(msg):
     if msg['ToUserName'] != 'filehelper': return
     if msg['Text'] == u'关闭':
-        close_music()
+        #close_music()
         itchat.send(u'音乐已关闭', 'filehelper')
     if msg['Text'] == u'帮助':
         itchat.send(HELP_MSG, 'filehelper')
     if msg['Text'] == u'随机':
         itchat.send(u'test','filehelper')
     else:
-        if not wait_choose:
-            search_result = searchMusic(msg['Text'], search_limit)
-            #只有搜索的结果，直接播放
-            if len(search_result) == 1:
-                os.system('open ' + )
-            itchat.send(searchResultPrint(search_result))
-            bool_searching = True
-            itchat.send(u'请选择匹配的音乐')
-            os.system(music_path + msg['Text']+".mp3")
+        if msg['Text'].find(' ') >= 0:
+            search_name, index = msg['Text'].split(' ')
+        else:
+            search_name = msg['Text']
+            index = -1
+        search_result = searchMusic(search_name, search_limit)
+        # 只有搜索的结果，直接播放
+        if len(search_result) == 1:
+            playMusic(1,search_result)
+        elif len(search_result) == 0:
+            itchat.send('无匹配歌曲','filehelper')
+        elif len(search_result) > 1:
+            playMusic(index,search_result)
 
-def chooseMusic(keyword):
-    if keyword.isdigit():
-        if
+def playMusic(index,search_result):
+    if type(index)==str and index.isdigit():
+        index = int(index)
+    if index >=1 and index <= search_limit:
+        index -= 1
+        k = music_dir + "\\" + '"' + str(search_result[index]) + " - " + music_index[search_result[index]]['singer'] + ".mp3\""
+        os.system(k)
+        itchat.send('开始播放：' + str(search_result[index]) + " - " + music_index[search_result[index]]['singer'],'filehelper')
+    else:
+        itchat.send('输入非法，未播放成功','filehelper')
+
 
 #为当前的文件夹里面的音乐建立index
 def indexMusic(path):
     file_list = os.listdir(music_dir)
     for music_name in file_list:
-        singer, name = music_name.split(" - ")
-        name = name.split('.')[0]
-        music_index[name] = {'singer':singer,'file':singer + " - " + name + '.mp3'}
+        if re.match(pattern=re.compile(".*\.mp3"),string=music_name):
+            name, singer = music_name.split(" - ")
+            singer = singer.split('.')[0]
+            music_index[name] = {'singer':singer,'file':music_name}
+    print("乐库曲目总数：" + str(len(music_index)))
 
 #通过关键字搜索音乐，返回一个list，并通过微信输出给用户搜索结果
 def searchMusic(keyword, limit_num=search_limit):
@@ -72,12 +85,9 @@ def searchResultPrint(search_result):
     for i in search_result:
         r = r + str(index) + ": " + i + "-" + music_index[i]['singer'] + '\n'
         index += 1
-    r = r + "0: 返回"
-    itchat.send(r)
-
-
+    itchat.send(r,'filehelper')
 
 indexMusic(music_dir)
-#itchat.auto_login(True)
-#itchat.send(HELP_MSG, 'filehelper')
-#itchat.run()
+itchat.auto_login(True)
+itchat.send(HELP_MSG, 'filehelper')
+itchat.run()
