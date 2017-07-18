@@ -49,7 +49,7 @@ def music_player(msg):
                 itchat.send('未找到对应歌曲','filehelper')
 
 platform, music_dir = judgePlatform()
-music_library = indexMusic(music_dir, bool_NameFirst=False)
+music_library = indexMusic(music_dir, bool_NameFirst=True)
 itchat.auto_login(True)
 itchat.send(HELP_MSG, 'filehelper')
 itchat.run()
